@@ -4,7 +4,18 @@
   allow for builds with either single or double precision EKF
  */
 
-#include <AP_HAL/AP_HAL.h>
+#include <math.h>
+#include <string.h>
+#ifndef HAL_WITH_EKF_DOUBLE
+#define HAL_WITH_EKF_DOUBLE 0
+#endif
+#ifndef MATH_CHECK_INDEXES
+#define MATH_CHECK_INDEXES 0
+#endif
+#ifndef AP_MATH_ALLOW_DOUBLE_FUNCTIONS
+#define AP_MATH_ALLOW_DOUBLE_FUNCTIONS 0
+#endif
+
 #include <float.h>
 
 /*

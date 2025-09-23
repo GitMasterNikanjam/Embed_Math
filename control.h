@@ -1,6 +1,10 @@
 #pragma once
 
-#include <AP_HAL/AP_HAL_Boards.h>
+// AP_HAL removed: provide local default for HAL_WITH_POSTYPE_DOUBLE
+#ifndef HAL_WITH_POSTYPE_DOUBLE
+#define HAL_WITH_POSTYPE_DOUBLE 0
+#endif
+
 #include "vector2.h"
 #include "vector3.h"
 

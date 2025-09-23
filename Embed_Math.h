@@ -5,8 +5,11 @@
 #include <stdint.h>
 #include <type_traits>
 
-#include <AP_Common/AP_Common.h>
-#include <AP_Param/AP_Param.h>
+#include "../Embed_Common/Embed_Common.h"
+
+#ifdef USE_AP_PARAM
+    #include <AP_Param/AP_Param.h>
+#endif
 
 #include "definitions.h"
 #include "crc.h"
@@ -19,6 +22,13 @@
 #include "spline5.h"
 #include "location.h"
 #include "control.h"
+
+#ifndef __AP_LINE__
+#define __AP_LINE__ __LINE__
+#endif
+#ifndef __AP_FILE__
+#define __AP_FILE__ __FILE__
+#endif
 
 static const float NaNf = nanf("0x4152");
 
@@ -35,7 +45,9 @@ typedef Quaternion QuaternionF;
 #endif
 
 // define AP_Param type AP_Vector3f
-AP_PARAMDEFV(Vector3f, Vector3f, AP_PARAM_VECTOR3F);
+#ifdef USE_AP_PARAM
+    AP_PARAMDEFV(Vector3f, Vector3f, AP_PARAM_VECTOR3F);
+#endif
 
 /*
  * Check whether two floats are equal
@@ -53,8 +65,11 @@ is_equal(const Arithmetic1 v_1, const Arithmetic2 v_2);
  */
 template <typename T>
 inline bool is_zero(const T fVal1) {
-    static_assert(std::is_floating_point<T>::value || std::is_base_of<T,AP_Float>::value,
-                  "Template parameter not of type float");
+    #ifdef USE_AP_PARAM
+    static_assert(std::is_floating_point<T>::value || std::is_base_of<T, AP_Float>::value, "Template parameter not of type float");
+    #else
+    static_assert(std::is_floating_point<T>::value, "Template parameter not of type float");
+    #endif
     return is_zero(static_cast<float>(fVal1));
 }
 
@@ -63,8 +78,11 @@ inline bool is_zero(const T fVal1) {
  */
 template <typename T>
 inline bool is_positive(const T fVal1) {
-    static_assert(std::is_floating_point<T>::value || std::is_base_of<T,AP_Float>::value,
-                  "Template parameter not of type float");
+    #ifdef USE_AP_PARAM
+    static_assert(std::is_floating_point<T>::value || std::is_base_of<T, AP_Float>::value, "Template parameter not of type float");
+    #else
+    static_assert(std::is_floating_point<T>::value, "Template parameter not of type float");
+    #endif
     return (static_cast<float>(fVal1) >= FLT_EPSILON);
 }
 
@@ -74,8 +92,11 @@ inline bool is_positive(const T fVal1) {
  */
 template <typename T>
 inline bool is_negative(const T fVal1) {
-    static_assert(std::is_floating_point<T>::value || std::is_base_of<T,AP_Float>::value,
-                  "Template parameter not of type float");
+    #ifdef USE_AP_PARAM
+    static_assert(std::is_floating_point<T>::value || std::is_base_of<T, AP_Float>::value, "Template parameter not of type float");
+    #else
+    static_assert(std::is_floating_point<T>::value, "Template parameter not of type float");
+    #endif
     return (static_cast<float>(fVal1) <= (-1.0 * FLT_EPSILON));
 }
 

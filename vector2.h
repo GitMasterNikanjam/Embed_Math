@@ -38,7 +38,7 @@
 
 #include <cmath>
 #include <float.h>
-#include <AP_Common/AP_Common.h>
+#include "../Embed_Common/Embed_Common.h"
 #include "ftype.h"
 
 template <typename T>

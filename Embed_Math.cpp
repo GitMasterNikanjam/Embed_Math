@@ -1,8 +1,23 @@
-#include "AP_Math.h"
+#include "Embed_Math.h"
 
 #include <float.h>
 
+#ifdef USE_AP_INTERNAL_ERROR
 #include <AP_InternalError/AP_InternalError.h>
+#endif
+
+#include <cstdlib>
+#include <cassert>
+#ifndef random
+#define random rand
+#endif
+
+#ifndef AP_INTERNALERROR_ENABLED
+#define AP_INTERNALERROR_ENABLED 0
+#endif
+#ifndef INTERNAL_ERROR
+#define INTERNAL_ERROR(...) do{}while(0)
+#endif
 
 /*
  * is_equal(): Integer implementation, provided for convenience and
@@ -32,12 +47,15 @@ is_equal(const Arithmetic1 v_1, const Arithmetic2 v_2)
         return fabs(v_1 - v_2) < std::numeric_limits<double>::epsilon();
     }
 #endif
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wabsolute-value"
+    /* (optional) silence clang-only pragmas on non-clang compilers */
+    #if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wabsolute-value"
+    #pragma clang diagnostic pop
+    #endif
     // clang doesn't realise we catch the double case above and warns
     // about loss of precision here.
     return fabsf(v_1 - v_2) < std::numeric_limits<float>::epsilon();
-#pragma clang diagnostic pop
 }
 
 template bool is_equal<int>(const int v_1, const int v_2);
@@ -269,6 +287,7 @@ ftype wrap_2PI(const ftype radian)
 template <typename T>
 T constrain_value_line(const T amt, const T low, const T high, uint32_t line)
 {
+    (void)line; // silence unused param when not using line info
     // the check for NaN as a float prevents propagation of floating point
     // errors through any function that uses constrain_value(). The normal
     // float semantics already handle -Inf and +Inf
@@ -346,7 +365,7 @@ uint16_t get_random16(void)
 float rand_float(void)
 {
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-    return ((((unsigned)random()) % 2000000) - 1.0e6) / 1.0e6;
+    return ((((unsigned)random()) % 2000000) - 1.0e6f) / 1.0e6f;
 #else
     return (get_random16() / 65535.0) * 2 - 1;
 #endif
@@ -434,7 +453,7 @@ void fill_nanf(float *f, uint16_t count)
         }
     }
     if (count > ARRAY_SIZE(many_nanfs)) {
-        AP_HAL::panic("Too big an area to fill");
+        /* standalone build: no HAL panic */ return;
     }
     memcpy(f, many_nanfs, count*sizeof(many_nanfs[0]));
 #else
@@ -457,7 +476,7 @@ void fill_nanf(double *f, uint16_t count)
         }
     }
     if (count > ARRAY_SIZE(many_nanfs)) {
-        AP_HAL::panic("Too big an area to fill");
+        /* standalone build: no HAL panic */ return;
     }
     memcpy(f, many_nanfs, count*sizeof(many_nanfs[0]));
 #else

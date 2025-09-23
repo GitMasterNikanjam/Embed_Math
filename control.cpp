@@ -19,10 +19,17 @@
 /*
  *  this module provides common controller functions
  */
-#include "AP_Math.h"
+#include "Embed_Math.h"
 #include "vector2.h"
 #include "vector3.h"
-#include <AP_InternalError/AP_InternalError.h>
+
+// AP_InternalError removed: provide no-op INTERNAL_ERROR and feature flag
+#ifndef AP_INTERNALERROR_ENABLED
+#define AP_INTERNALERROR_ENABLED 0
+#endif
+#ifndef INTERNAL_ERROR
+#define INTERNAL_ERROR(...) do{}while(0)
+#endif
 
 // control default definitions
 #define CORNER_ACCELERATION_RATIO   1.0/safe_sqrt(2.0)   // acceleration reduction to enable zero overshoot corners

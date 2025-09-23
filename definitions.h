@@ -2,8 +2,10 @@
 
 #include <cmath>
 
-#include <AP_HAL/AP_HAL_Boards.h>
-#include <AP_HAL/AP_HAL_Macros.h>  // sets AP_MATH_ALLOW_DOUBLE_FUNCTIONS
+// AP_HAL removed: provide local fallback for AP_MATH_ALLOW_DOUBLE_FUNCTIONS
+#ifndef AP_MATH_ALLOW_DOUBLE_FUNCTIONS
+#define AP_MATH_ALLOW_DOUBLE_FUNCTIONS 0
+#endif
 
 #ifdef M_PI
 # undef M_PI
