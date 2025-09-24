@@ -37,9 +37,20 @@
 #endif
 
 #include <cmath>
-#include <float.h>
-#include "../Embed_Common/Embed_Common.h"
-#include "ftype.h"
+#include <cfloat>
+#include <cstdint>
+#include <limits>
+#if __cplusplus >= 201703L
+#define WARN_IF_UNUSED [[nodiscard]]
+#else
+#define WARN_IF_UNUSED
+#endif
+inline bool is_zero(float v)  { return std::fabs(v) <= 1e-6f; }
+inline bool is_zero(double v) { return std::fabs(v) <= 1e-12; }
+template<typename U>
+inline bool is_equal(U a, U b)  { return a == b; }
+inline bool is_equal(float a, float b)  { return std::fabs(a-b) <= 1e-6f; }
+inline bool is_equal(double a, double b){ return std::fabs(a-b) <= 1e-12; }
 
 template <typename T>
 struct Vector2
@@ -251,13 +262,13 @@ struct Vector2
         const T intersection_run = point.x-seg_start.x;
         // check slopes are identical:
         if (::is_zero(expected_run)) {
-            if (fabsF(intersection_run) > FLT_EPSILON) {
+            if (std::fabs(intersection_run) > FLT_EPSILON) {
                 return false;
             }
         } else {
             const T expected_slope = (seg_end.y-seg_start.y)/expected_run;
             const T intersection_slope = (point.y-seg_start.y)/intersection_run;
-            if (fabsF(expected_slope - intersection_slope) > FLT_EPSILON) {
+            if (std::fabs(expected_slope - intersection_slope) > std::numeric_limits<T>::epsilon()) {
                 return false;
             }
         }

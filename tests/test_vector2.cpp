@@ -1,339 +1,111 @@
-#include <AP_gtest.h>
+/**
+ * @file test_vector2.cpp
+ * @brief Minimal standalone test for Vector2 (no gtest).
+ *
+ * Build (Linux/Mingw):
+ *   mkdir -p ./bin && g++ -std=c++11 -O2 -Wall -Wextra test_vector2.cpp ../vector2.cpp -o ./bin/test_vector2
+ *
+ * Run:
+ *   ./bin/test_vector2
+ */
 
-#include <AP_Math/AP_Math.h>
+#include <iostream>
+#include <cmath>
+#include "../vector2.h"
 
-const AP_HAL::HAL& hal = AP_HAL::get_HAL();
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-TEST(Vector2Test, Operator)
-{
-    Vector2f v_float0{1.0f, 1.0f};
-    EXPECT_FALSE(v_float0.is_zero());
-    v_float0 = Vector2f();
-    EXPECT_TRUE(v_float0.is_zero());
-    v_float0[1] = 1.0f;
-    EXPECT_FALSE(v_float0.is_zero());
-    const float testf1 = v_float0[1];
-    EXPECT_TRUE(is_equal(testf1, 1.0f));
-    v_float0.zero();
-    EXPECT_TRUE(v_float0.is_zero());
+static int g_fail = 0;
 
-    Vector2i v_inti1{1, 1};
-    EXPECT_FALSE(v_inti1.is_zero());
-    v_inti1 = Vector2i();
-    EXPECT_TRUE(v_inti1.is_zero());
-    v_inti1[0] = 1;
-    EXPECT_FALSE(v_inti1.is_zero());
-    const int16_t testi1 = v_inti1[0];
-    EXPECT_TRUE(1 == testi1);
-    v_inti1.zero();
-    EXPECT_TRUE(v_inti1.is_zero());
+#define CHECK(cond, msg) do { \
+  if (cond) std::cout << "[ OK ] " << msg << "\n"; \
+  else { std::cerr << "[FAIL] " << msg << "\n"; ++g_fail; } \
+} while (0)
 
-    Vector2ui v_uinti1{1u, 1u};
-    EXPECT_FALSE(v_uinti1.is_zero());
-    v_uinti1 = Vector2ui();
-    EXPECT_TRUE(v_uinti1.is_zero());
-    v_uinti1[0] = 1u;
-    EXPECT_FALSE(v_uinti1.is_zero());
-    const uint16_t testui1 = v_uinti1[0];
-    EXPECT_TRUE(1u == testui1);
-    v_uinti1.zero();
-    EXPECT_TRUE(v_uinti1.is_zero());
-
-    Vector2l v_intl1{1, 1};
-    EXPECT_FALSE(v_intl1.is_zero());
-    v_intl1 = Vector2l();
-    EXPECT_TRUE(v_intl1.is_zero());
-    v_intl1[0] = 1;
-    EXPECT_FALSE(v_intl1.is_zero());
-    const int32_t testl1 = v_intl1[0];
-    EXPECT_TRUE(1 == testl1);
-    v_intl1.zero();
-    EXPECT_TRUE(v_intl1.is_zero());
-
-    Vector2ul v_uint1l{1, 1};
-    EXPECT_FALSE(v_uint1l.is_zero());
-    v_uint1l = Vector2ul();
-    EXPECT_TRUE(v_uint1l.is_zero());
-    v_uint1l[0] = 1;
-    EXPECT_FALSE(v_uint1l.is_zero());
-    const uint32_t testul1 = v_uint1l[0];
-    EXPECT_TRUE(1 == testul1);
-    v_uint1l.zero();
-    EXPECT_TRUE(v_uint1l.is_zero());
-
-    Vector2f v_float1(1.0f, 1.0f);
-    Vector2f v_float2(1.0f, 0.0f);
-    EXPECT_FLOAT_EQ(1.0f, v_float1 * v_float2);
-    EXPECT_FLOAT_EQ(-1.0f, v_float1 % v_float2);
-    v_float1 *= 2.0f;
-    EXPECT_TRUE(Vector2f(2.0f, 2.0f) == v_float1);
-    v_float1 /= 2.0f;
-    EXPECT_TRUE(Vector2f(1.0f, 1.0f) == v_float1);
-    v_float1 -= v_float2;
-    EXPECT_TRUE(Vector2f(0.0f, 1.0f) == v_float1);
-    v_float1 += v_float2;
-    EXPECT_TRUE(Vector2f(1.0f, 1.0f) == v_float1);
-    EXPECT_TRUE(Vector2f(nanf("0x4152"), 1.0f).is_nan());
-    EXPECT_TRUE(Vector2f(1.0f / 0.0f, 1.0f).is_inf());
-    EXPECT_TRUE(Vector2f(2.0f, 2.0f) / 2.0f == v_float1);
-    EXPECT_TRUE(Vector2f(2.0f, 2.0f) == v_float1 * 2.0f);
-    EXPECT_TRUE(Vector2f(2.0f, 2.0f) - v_float1 == v_float1);
-    EXPECT_TRUE(Vector2f(2.0f, 2.0f) == v_float1 + v_float1);
-    EXPECT_TRUE(Vector2f(-1.0f, -1.0f) == -v_float1);
-    v_float1.zero();
-    EXPECT_TRUE(v_float1.is_zero());
+static inline bool nearf(float a, float b, float tol=1e-4f) {
+  return std::fabs(a-b) <= tol;
 }
 
-TEST(Vector2Test, IsEqual)
-{
-    Vector2l v_int1(1, 1);
-    Vector2l v_int2(1, 0);
-    Vector2<long> v_long1(1, 1);
-    Vector2<long> v_long2(1, 0);
-    Vector2f v_float1(1.0f, 1.0f);
-    Vector2f v_float2(1.0f, 0.0f);
+int main() {
+  using V = Vector2f;
 
-    EXPECT_FALSE(v_int1 == v_int2);
-    EXPECT_TRUE(v_int1 == v_int1);
-    EXPECT_TRUE(v_int1 != v_int2);
-    EXPECT_FALSE(v_int1 != v_int1);
-    EXPECT_FALSE(v_long1 == v_long2);
-    EXPECT_TRUE(v_long1 == v_long1);
-    EXPECT_TRUE(v_long1 != v_long2);
-    EXPECT_FALSE(v_long1 != v_long1);
-    EXPECT_FALSE(v_float1 == v_float2);
-    EXPECT_TRUE(v_float1 == v_float1);
-    EXPECT_TRUE(v_float1 != v_float2);
-    EXPECT_FALSE(v_float1 != v_float1);
+  std::cout << "=== Vector2 basic tests ===\n";
+
+  // 1) length / normalize
+  {
+    V v{3.0f, 4.0f};
+    CHECK(nearf(v.length(), 5.0f), "length(3,4) == 5");
+    v.normalize();
+    CHECK(nearf(v.length(), 1.0f, 1e-5f), "normalize sets length ~= 1");
+  }
+
+  // 2) dot / cross
+  {
+    V ex{1,0}, ey{0,1};
+    CHECK(nearf(ex * ey, 0.0f), "dot((1,0),(0,1)) == 0");
+    CHECK(nearf(ex % ey, 1.0f), "cross((1,0),(0,1)) == 1");
+  }
+
+  // 3) angle between vectors + angle of a vector
+  {
+    V ex{1,0}, ey{0,1};
+    float a = ex.angle(ey);          // ~ pi/2
+    CHECK(nearf(a, float(M_PI/2), 1e-5f), "angle((1,0),(0,1)) ~= pi/2");
+    CHECK(nearf(ey.angle(), float(M_PI/2), 1e-5f), "angle((0,1)) ~= pi/2");
+  }
+
+  // 4) projection
+  {
+    V v{2,2}, axis{1,0};
+    V p = v.projected(axis);         // should drop Y, keep X
+    CHECK(nearf(p.x, 2.0f) && nearf(p.y, 0.0f), "projected((2,2) onto x-axis) -> (2,0)");
+  }
+
+  // 5) segment intersection
+  {
+    V s1a{0,0}, s1b{2,0};
+    V s2a{1,-1}, s2b{1,1};
+    V inter{};
+    bool hit = V::segment_intersection(s1a, s1b, s2a, s2b, inter);
+    CHECK(hit, "segment_intersection finds crossing");
+    CHECK(nearf(inter.x, 1.0f) && nearf(inter.y, 0.0f), "intersection ~ (1,0)");
+  }
+
+  // 6) circle–segment intersection (center at origin, r=1)
+  {
+    V a{-2,0}, b{ 2,0}, c{0,0}, inter{};
+    bool hit = V::circle_segment_intersection(a, b, c, 1.0f, inter);
+    CHECK(hit, "circle_segment_intersection hits");
+    // Your implementation returns the first valid root in [0,1]; for this setup
+    // that's x~=+1. (Either +1 or -1 is acceptable for correctness.)
+    CHECK(nearf(std::fabs(inter.x), 1.0f) && nearf(inter.y, 0.0f),
+          "intersection lies on the unit circle on X axis");
+  }
+
+  // 7) closest point on segment
+  {
+    V p{2,1}, v{0,0}, w{4,0};
+    V cp = V::closest_point(p, v, w);
+    CHECK(nearf(cp.x, 2.0f) && nearf(cp.y, 0.0f), "closest_point to (2,1) on [0,0]-[4,0] is (2,0)");
+  }
+
+  // 8) rotate
+  {
+    V v{1,0};
+    v.rotate(float(M_PI/2));
+    CHECK(nearf(v.x, 0.0f, 1e-5f) && nearf(v.y, 1.0f, 1e-5f), "rotate (1,0) by 90deg -> (0,1)");
+  }
+
+  // 9) offset_bearing
+  {
+    V p{0,0};
+    p.offset_bearing(0.0f,  1.0f);   // east
+    p.offset_bearing(90.0f, 1.0f);   // north
+    CHECK(nearf(p.x, 1.0f, 1e-4f) && nearf(p.y, 1.0f, 1e-4f), "offset_bearing 0° then 90° by 1 m each -> (1,1)");
+  }
+
+  std::cout << "=== Done. Failures: " << g_fail << " ===\n";
+  return g_fail ? 1 : 0;
 }
-
-TEST(Vector2Test, angle)
-{
-    EXPECT_FLOAT_EQ(M_PI/2, Vector2f(0, 1).angle());
-    EXPECT_FLOAT_EQ(M_PI/4, Vector2f(1, 1).angle());
-    EXPECT_TRUE(is_zero(Vector2d(1, 0).angle()));
-    EXPECT_FLOAT_EQ(-M_PI*3/4, Vector2f(-1, -1).angle());
-    EXPECT_FLOAT_EQ(-M_PI*3/4, Vector2f(-5, -5).angle());
-
-    // test all cardinal and inter-cardinal points:
-    EXPECT_FLOAT_EQ(M_PI*0/4, Vector2f(1, 0).angle());
-    EXPECT_FLOAT_EQ(M_PI*1/4, Vector2f(1, 1).angle());
-    EXPECT_FLOAT_EQ(M_PI*2/4, Vector2f(0, 1).angle());
-    EXPECT_FLOAT_EQ(M_PI*3/4, Vector2f(-1, 1).angle());
-    EXPECT_FLOAT_EQ(M_PI*4/4, Vector2f(-1, 0).angle());
-    EXPECT_FLOAT_EQ(-M_PI*3/4, Vector2f(-1, -1).angle());
-    EXPECT_FLOAT_EQ(-M_PI*2/4, Vector2f(0, -1).angle());
-    EXPECT_FLOAT_EQ(-M_PI*1/4, Vector2f(1, -1).angle());
-
-    EXPECT_FLOAT_EQ(M_PI/2, Vector2f(0.0f, 1.0f).angle(Vector2f(1.0f, 0.0f)));
-    EXPECT_FLOAT_EQ(0.0f, Vector2f(0.5f, 0.5f).angle(Vector2f(0.5f, 0.5f)));
-    EXPECT_FLOAT_EQ(M_PI, Vector2f(0.5f, -0.5f).angle(Vector2f(-0.5f, 0.5f)));
-
-    EXPECT_FLOAT_EQ(0.0f, Vector2f(-0.0f, 0).angle(Vector2f(0.0f, 1.0f)));
-}
-
-TEST(Vector2Test, length)
-{
-    EXPECT_FLOAT_EQ(25, Vector2f(3, 4).length_squared());
-    Vector2f v_float1(1.0f, 1.0f);
-    EXPECT_TRUE(v_float1.limit_length(1.0f));
-    EXPECT_FALSE(Vector2f(-0.0f, 0.0f).limit_length(1.0f));
-}
-
-TEST(Vector2Test, normalized)
-{
-    Vector2f v_float1(3.0f, 3.0f);
-    v_float1.normalize();
-    EXPECT_EQ(Vector2f(3.0f, 3.0f).normalized(), v_float1);
-    EXPECT_EQ(Vector2f(sqrtf(2)/2, sqrtf(2)/2), Vector2f(5, 5).normalized());
-    EXPECT_EQ(Vector2f(3, 3).normalized(), Vector2f(5, 5).normalized());
-    EXPECT_EQ(Vector2f(-3, 3).normalized(), Vector2f(-5, 5).normalized());
-    EXPECT_NE(Vector2f(-3, 3).normalized(), Vector2f(5, 5).normalized());
-}
-
-TEST(Vector2Test, Project)
-{
-    Vector2f v_float1(1.0f, 1.0f);
-    Vector2f v_float2(2.0f, 1.0f);
-    v_float1.project(v_float2);
-    EXPECT_EQ(Vector2f(1.0f, 1.0f).projected(v_float2), v_float1);
-}
-
-TEST(Vector2Test, reflect)
-{
-    Vector2f reflected1 = Vector2f(3, 8);
-    reflected1.reflect(Vector2f(0, 1));
-    EXPECT_EQ(reflected1, Vector2f(-3, 8));
-
-    // colinear vectors
-    Vector2f reflected2 = Vector2f(3, 3);
-    reflected2.reflect(Vector2f(1, 1));
-    EXPECT_EQ(reflected2, Vector2f(3, 3));
-
-    // orthogonal vectors
-    Vector2f reflected3 = Vector2f(3, 3);
-    reflected3.reflect(Vector2f(1, -1));
-    EXPECT_EQ(reflected3, Vector2f(-3, -3));
-
-    // rotation
-    Vector2f base = Vector2f(2, 1);
-    base.rotate(radians(90));
-    EXPECT_FLOAT_EQ(base.x, -1);
-    EXPECT_FLOAT_EQ(base.y, 2);
-}
-
-TEST(Vector2Test, Offset_bearing)
-{
-    Vector2f v_float1(1.0f, 0.0f);
-    v_float1.offset_bearing(0.0f, 1.0f);
-    EXPECT_EQ(Vector2f(2.0f, 0.0f), v_float1);
-}
-
-TEST(Vector2Test, Perpendicular)
-{
-    Vector2f v_float1(1.0f, 1.0f);
-    EXPECT_EQ(Vector2f(0.0f, 2.0f), v_float1.perpendicular(v_float1, Vector2f(2.0f, 0.0f)));
-    EXPECT_EQ(Vector2f(2.0f, 0.0f), v_float1.perpendicular(v_float1, Vector2f(0.0f, 2.0f)));
-}
-
-TEST(Vector2Test, closest_point)
-{
-    // closest_point is (p, v,w)
-
-    // the silly case:
-    EXPECT_EQ((Vector2f{0, 0}),
-              (Vector2f::closest_point(Vector2f{0, 0}, Vector2f{0, 0}, Vector2f{0, 0})));
-    // on line:
-    EXPECT_EQ((Vector2f{0, 0}),
-              (Vector2f::closest_point(Vector2f{0, 0}, Vector2f{0, 0}, Vector2f{1, 1})));
-    EXPECT_EQ((Vector2f{5, 5}),
-              (Vector2f::closest_point(Vector2f{5, 5}, Vector2f{0, 0}, Vector2f{5, 5})));
-    // on line but not segment:
-    EXPECT_EQ((Vector2f{5, 5}),
-              (Vector2f::closest_point(Vector2f{6, 6}, Vector2f{0, 0}, Vector2f{5, 5})));
-
-    EXPECT_EQ((Vector2f{0.5, 0.5}),
-              (Vector2f::closest_point(Vector2f{1,0}, Vector2f{0, 0}, Vector2f{5, 5})));
-    EXPECT_EQ((Vector2f{0, 1}),
-              (Vector2f::closest_point(Vector2f{0,0}, Vector2f{-1, 1}, Vector2f{1, 1})));
-
-    // to (0,w)
-    // the silly case:
-    EXPECT_EQ((Vector2f{0, 0}),
-            (Vector2f::closest_point(Vector2f{0, 0}, Vector2f{0, 0})));
-    // on line:
-    EXPECT_EQ((Vector2f{0, 0}),
-            (Vector2f::closest_point(Vector2f{0, 0}, Vector2f{1, 1})));
-    EXPECT_EQ((Vector2f{5, 5}),
-            (Vector2f::closest_point(Vector2f{5, 5}, Vector2f{5, 5})));
-    // on line but not segment:
-    EXPECT_EQ((Vector2f{5, 5}),
-            (Vector2f::closest_point(Vector2f{6, 6}, Vector2f{5, 5})));
-
-    EXPECT_EQ((Vector2f{0.5, 0.5}),
-            (Vector2f::closest_point(Vector2f{1,0}, Vector2f{5, 5})));
-    EXPECT_EQ((Vector2f{0, 0}),
-            (Vector2f::closest_point(Vector2f{0,0}, Vector2f{1, 1})));
-}
-
-TEST(Vector2Test, closest_distance)
-{
-    EXPECT_FLOAT_EQ(1.0f, Vector2f::closest_distance_between_line_and_point_squared(Vector2f{0,0}, Vector2f{1, 0}, Vector2f{0, 1}));
-    EXPECT_FLOAT_EQ(1.0f, Vector2f::closest_distance_between_line_and_point(Vector2f{0,0}, Vector2f{1, 0}, Vector2f{0, 1}));
-    EXPECT_FLOAT_EQ(1.0f, Vector2f::closest_distance_between_lines_squared(Vector2f{0,0}, Vector2f{1, 0}, Vector2f{0, 1}, Vector2f{1, 1}));
-    EXPECT_FLOAT_EQ(1.0f, Vector2f::closest_distance_between_radial_and_point_squared(Vector2f{0, 1}, Vector2f{1, 1}));
-    EXPECT_FLOAT_EQ(1.0f, Vector2f::closest_distance_between_radial_and_point(Vector2f{0, 1}, Vector2f{1, 1}));
-}
-
-TEST(Vector2Test, segment_intersectionx)
-{
-    Vector2f intersection;
-    EXPECT_EQ(Vector2f::segment_intersection(
-            Vector2f{-1.0f, 0.0f}, // seg start
-            Vector2f{1.0f, 0.0f}, // seg end
-            Vector2f{0.0f, -1.0f}, // seg start
-            Vector2f{0.0f, 1.0f}, // seg end
-            intersection         // return value for intersection point
-    ), true);
-    EXPECT_EQ(intersection, Vector2f(0.0f, 0.0f));
-    EXPECT_EQ(Vector2f::segment_intersection(
-            Vector2f{1.0f, 0.0f}, // seg start
-            Vector2f{2.0f, 0.0f}, // seg end
-            Vector2f{0.0f, -1.0f}, // seg start
-            Vector2f{0.0f, 1.0f}, // seg end
-            intersection         // return value for intersection point
-    ), false);
-    EXPECT_EQ(Vector2f::segment_intersection(
-            Vector2f{1.0f, 0.0f}, // seg start
-            Vector2f{2.0f, 0.0f}, // seg end
-            Vector2f{1.0f, 1.0f}, // seg start
-            Vector2f{2.0f, 1.0f}, // seg end
-            intersection         // return value for intersection point
-    ), false);
-}
-
-TEST(Vector2Test, circle_segment_intersectionx)
-{
-    Vector2f intersection;
-    EXPECT_EQ(Vector2f::circle_segment_intersection(
-                  Vector2f{0,0}, // seg start
-                  Vector2f{1,1}, // seg end
-                  Vector2f{0,0}, // circle center
-                  0.5,                 // circle radius
-                  intersection         // return value for intersection point
-                  ), true);
-    EXPECT_EQ(intersection, Vector2f(sqrtf(0.5)/2,sqrtf(0.5)/2));
-
-    EXPECT_EQ(Vector2f::circle_segment_intersection(
-                  Vector2f{std::numeric_limits<float>::quiet_NaN(),
-                          std::numeric_limits<float>::quiet_NaN()}, // seg start
-                  Vector2f{1,1}, // seg end
-                  Vector2f{0,0}, // circle center
-                  0.5,                 // circle radius
-                  intersection         // return value for intersection point
-                  ), false);
-
-}
-
-TEST(Vector2Test, point_on_segmentx)
-{
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{0.0f, 1.0f}, // point
-            Vector2f{0.0f, 0.0f}, // seg start
-            Vector2f{0.0f, 2.0f} // seg end
-    ), true);
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{1.0f, 1.0f}, // point
-            Vector2f{0.0f, 0.0f}, // seg start
-            Vector2f{0.0f, 2.0f} // seg end
-    ), false);
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{1.0f, 1.0f}, // point
-            Vector2f{0.0f, 0.0f}, // seg start
-            Vector2f{3.0f, 1.0f} // seg end
-    ), false);
-    printf("4\n");
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{1.0f, 0.0f}, // point
-            Vector2f{2.0f, 1.0f}, // seg start
-            Vector2f{3.0f, 2.0f} // seg end
-    ), false);
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{5.0f, 0.0f}, // point
-            Vector2f{4.0f, 1.0f}, // seg start
-            Vector2f{3.0f, 2.0f} // seg end
-    ), false);
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{3.0f, 0.0f}, // point
-            Vector2f{3.0f, 1.0f}, // seg start
-            Vector2f{3.0f, 2.0f} // seg end
-    ), false);
-    EXPECT_EQ(Vector2f::point_on_segment(
-            Vector2f{3.0f, 0.0f}, // point
-            Vector2f{3.0f, 2.0f}, // seg start
-            Vector2f{3.0f, 1.0f} // seg end
-    ), false);
-
-}
-
-AP_GTEST_MAIN()

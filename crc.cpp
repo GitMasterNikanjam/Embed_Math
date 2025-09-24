@@ -19,8 +19,6 @@
 #include <stdint.h>
 #include "crc.h"
 
-#include <AP_HAL/AP_HAL_Boards.h>
-
 /**
  * crc4 method from datasheet for 16 bytes (8 short values)
  * 

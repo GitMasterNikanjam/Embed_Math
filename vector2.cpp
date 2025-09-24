@@ -1,5 +1,5 @@
 /*
- * vector3.cpp
+ * vector2.cpp
  * Copyright (C) Andrew Tridgell 2012
  *
  * This file is free software: you can redistribute it and/or modify it
@@ -17,8 +17,38 @@
  */
 
 #pragma GCC optimize("O2")
+#include "vector2.h"
+#include <cmath>
+#include <algorithm>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-#include "AP_Math.h"
+// --- local math helpers to replace Embed_Math ---
+#if __cplusplus >= 201703L
+ static inline float acosF(float x) { return std::acosf(std::clamp(x, -1.0f, 1.0f)); }
+ #else
+ static inline float clamp11(float v, float lo, float hi) { return (v < lo) ? lo : (v > hi ? hi : v); }
+ static inline float acosF(float x) { return std::acosf(clamp11(x, -1.0f, 1.0f)); }
+ #endif
+static inline float atan2F(float y, float x) { return std::atan2f(y, x); }
+static inline float cosF(float x)    { return std::cosf(x); }
+static inline float sinF(float x)    { return std::sinf(x); }
+static inline float sqrtF(float x)   { return (x <= 0.0f) ? 0.0f : std::sqrtf(x); }
+static inline float radians(float deg){ return deg * float(M_PI/180.0); }
+template<typename T> static inline T sq(T v){ return v*v; }
+template<typename T> static inline bool is_positive(T v){ return v > T(0); }
+// If building with C++11, replace hypot with sqrt(x*x + y*y)
+template<typename T> static inline T norm(T x, T y){
+#if __cplusplus >= 201703L
+    return std::hypot(x, y);
+#else
+    return std::sqrt(x*x + y*y);
+#endif
+}
+template<typename T> static inline bool is_zero(T v){ return std::abs(v) <= T(1e-6); }
+static inline float fabsF(float v) { return std::fabsf(v); }
+// Use std::min/std::max instead of MIN macro
 
 template <typename T>
 T Vector2<T>::length_squared() const
@@ -83,13 +113,13 @@ Vector2<T> &Vector2<T>::operator -=(const Vector2<T> &v)
 template <typename T>
 bool Vector2<T>::is_nan(void) const
 {
-    return isnan(x) || isnan(y);
+    return std::isnan(x) || std::isnan(y);
 }
 
 template <typename T>
 bool Vector2<T>::is_inf(void) const
 {
-    return isinf(x) || isinf(y);
+    return std::isinf(x) || std::isinf(y);
 }
 
 template <typename T>
@@ -214,13 +244,13 @@ bool Vector2<T>::circle_segment_intersection(const Vector2<T>& seg_start, const 
     const T c = sq(seg_start_local.x) + sq(seg_start_local.y) - sq(radius);
 
     // check for invalid data
-    if (::is_zero(a) || isnan(a) || isnan(b) || isnan(c)) {
+    if (::is_zero(a) || std::isnan(a) || std::isnan(b) || std::isnan(c)) {
        return false;
     }
 
     const T delta = sq(b) - (4.0f * a * c);
 
-    if (isnan(delta)) {
+    if (std::isnan(delta)) {
        return false;
     }
 
@@ -267,14 +297,18 @@ bool Vector2<T>::circle_segment_intersection(const Vector2<T>& seg_start, const 
 template <typename T>
 void Vector2<T>::normalize()
 {
-    *this /= length();
+    const T len = length();
+    if (len > T(0)) {
+        *this /= len;
+    }
 }
 
 // returns the normalized vector
 template <typename T>
 Vector2<T> Vector2<T>::normalized() const
 {
-    return *this/length();
+    const T len = length();
+    return (len > T(0)) ? (*this/len) : *this;
 }
 
 // reflects this vector about n
@@ -290,14 +324,18 @@ void Vector2<T>::reflect(const Vector2<T> &n)
 template <typename T>
 void Vector2<T>::project(const Vector2<T> &v)
 {
-    *this= v * (*this * v)/(v*v);
+    const T vv = (v*v);
+    if (vv > T(0)) {
+        *this = v * ((*this * v)/vv);
+    }
 }
 
 // returns this vector projected onto v
 template <typename T>
 Vector2<T> Vector2<T>::projected(const Vector2<T> &v) const
 {
-    return v * (*this * v)/(v*v);
+    const T vv = (v*v);
+    return (vv > T(0)) ? v * ((*this * v)/vv) : Vector2<T>(0,0);
 }
 
 // extrapolate position given bearing (in degrees) and distance
@@ -334,7 +372,7 @@ Vector2<T> Vector2<T>::closest_point(const Vector2<T> &p, const Vector2<T> &v, c
 {
     // length squared of line segment
     const T l2 = (v - w).length_squared();
-    if (l2 < FLT_EPSILON) {
+    if (l2 <= T(0)) {
         // v == w case
         return v;
     }
@@ -362,7 +400,7 @@ Vector2<T> Vector2<T>::closest_point(const Vector2<T> &p, const Vector2<T> &w)
 {
     // length squared of line segment
     const T l2 = w.length_squared();
-    if (l2 < FLT_EPSILON) {
+    if (l2 <= T(0)) {
         // v == w case
         return w;
     }
@@ -410,9 +448,9 @@ T Vector2<T>::closest_distance_between_lines_squared(const Vector2<T> &a1,
     const T dist2 = Vector2<T>::closest_distance_between_line_and_point_squared(b1,b2,a2);
     const T dist3 = Vector2<T>::closest_distance_between_line_and_point_squared(a1,a2,b1);
     const T dist4 = Vector2<T>::closest_distance_between_line_and_point_squared(a1,a2,b2);
-    const T m1 = MIN(dist1,dist2);
-    const T m2 = MIN(dist3,dist4);
-    return MIN(m1,m2);
+    const T m1 = std::min(dist1,dist2);
+    const T m2 = std::min(dist3,dist4);
+    return std::min(m1,m2);
 }
 
 // w defines a line segment from the origin
@@ -457,4 +495,3 @@ template bool Vector2<long>::operator ==(const Vector2<long> &v) const;
 template bool Vector2<long>::operator !=(const Vector2<long> &v) const;
 template bool Vector2<int>::operator ==(const Vector2<int> &v) const;
 template bool Vector2<int>::operator !=(const Vector2<int> &v) const;
-template int32_t Vector2l::closest_distance_between_line_and_point_squared(Vector2l const&, Vector2l const&, Vector2l const&);
